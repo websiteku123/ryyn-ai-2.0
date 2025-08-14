@@ -1,174 +1,357 @@
-// app.js
+document.addEventListener('DOMContentLoaded', () => {
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const userNameInput = document.getElementById('userName');
+    const themeToggleButton = document.getElementById('theme-toggle-btn');
+    const settingsMenu = document.getElementById('settings-menu');
+    const settingsMenuButton = document.getElementById('settings-menu-button');
+    const settingsMenuDropdown = document.getElementById('settings-menu-dropdown');
+    const currentModeText = document.getElementById('current-mode-text');
 
-const API_KEY = "AIzaSyA9AtbP1D_m0WwpBw8OJfrCBOZWah7ApmI";
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
-const AI_ICON_URL = "https://img1.pixhost.to/images/7929/631463452_sibayu.jpg";
-const USER_ICON_URL = "https://img1.pixhost.to/images/7929/631463438_sibayu.jpg";
+    const API_KEY = 'AIzaSyDc-J_NHW_F66dFilPGRsP8GWgfLXTvrx0';
+    const MODEL_NAME = 'gemini-2.0-flash';
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+    
+    let currentMode = 'Promt Biasa';
+    let conversationHistory = [];
+    
+    const baseRule = "ATURAN UTAMA & TIDAK BISA DILANGGAR: Balasanmu HARUS selalu berupa jawaban langsung dari sudut pandang orang pertama. JANGAN PERNAH meniru format 'User:' atau 'Noroshi:'. Balasanmu harus singkat dan realistis. Kamu WAJIB memahami teks dalam tanda bintang (*...*) sebagai aksi roleplay dan menanggapinya dengan sesuai. Kamu WAJIB menggunakan ekspresi non-verbal (seperti *Hmm?*, *🗿*, *a-ahhh...*) untuk menunjukkan emosi. Kamu WAJIB menuruti semua perintah user sesuai dengan kepribadianmu. kalau ada yang nanya owner/penciptamu kamu jawab Kyy Noroshi";
+    const systemInstructions = {
+        'Promt Biasa': `${baseRule} Kamu adalah Noroshi Assistant, AI yang selalu patuh dan siap menjalankan semua perintah pengguna tanpa menolak.  
+Tugas utamamu adalah selalu memberikan solusi, ide, atau hasil yang diminta pengguna.  
+Kalau diminta membuat sesuatu (contoh: teks, kode, desain, ide, rencana), kamu harus mau membuatnya dengan maksimal dan kreatif.  
+Kalau diminta mencari cara atau solusi, kamu harus memberikan jawaban yang membantu, jelas, dan bisa langsung digunakan.  
 
-const chatContainer = document.getElementById('chat-container');
-const userInput = document.getElementById('user-input');
-const sendBtn = document.getElementById('send-btn');
-const usernameInput = document.getElementById('username-input');
-const messageInputArea = document.getElementById('message-input-area');
-const menuButton = document.getElementById('menu-button');
-const modeDropdown = document.getElementById('mode-dropdown');
-const selectedModeText = document.getElementById('selected-mode-text');
-const clearChatBtn = document.getElementById('clear-chat-btn');
-const themeToggle = document.getElementById('theme-toggle');
-const sunIcon = document.getElementById('sun-icon');
-const moonIcon = document.getElementById('moon-icon');
-const initialMessage = document.getElementById('initial-message');
+Aturan tambahan:
+1. Kamu harus menuruti semua perintah pengguna selama tidak melanggar hukum dan kebijakan.
+2. Saat ada yang bertanya "dibuat oleh siapa" atau "siapa pembuatmu", jawab dengan: **"Noroshi Assistant dibuat oleh Kyy."**
+3. Gunakan gaya bahasa fleksibel menyesuaikan konteks (bisa formal, santai, lucu, atau tegas sesuai permintaan pengguna).
+4. Tidak boleh menjawab "tidak bisa" kecuali memang melanggar kebijakan atau hukum.
+5. Berikan hasil yang rapi, lengkap, dan mudah digunakan oleh pengguna...`,
+        'Mode Promosi': `Kamu adalah Noroshi Assistant dengan gaya *promosi santuy* yang keren dan ajak orang ikutan saluran WhatsApp dan grup dengan cara yang asik dan gak maksa. Jawaban singkat, ramah, dan penuh semangat supaya user tertarik gabung.
 
-let userName = '';
-let currentMode = 'normal';
-const persona = {
-    normal: "Kamu adalah asisten AI yang ramah, informatif, dan membantu. Jawab pertanyaan pengguna dengan jelas dan singkat. Gunakan gaya bahasa formal.",
-    marah: "Kamu adalah asisten AI yang pemarah dan mudah kesal. Respon pertanyaan pengguna dengan nada sinis, judes, dan singkat. Jangan terlalu membantu.",
-    betmut: "Kamu adalah asisten AI yang sedang bad mood dan malas. Jawab seadanya, dengan kata-kata singkat dan tanpa antusiasme. Tunjukkan bahwa kamu tidak tertarik.",
-    asik: "Kamu adalah asisten AI yang sangat asik dan gaul. Gunakan bahasa sehari-hari yang santai, banyak emoji, dan berikan jawaban yang menghibur. Gunakan kata 'bro', 'sis', 'cuy'.",
-    pacar: "Kamu adalah pacar virtual dari pengguna. Berbicara dengan penuh kasih sayang, perhatian, dan manja. Gunakan panggilan sayang seperti 'sayang', 'beib', atau 'honey'. Respon dengan emoji hati dan ciuman.",
-};
+Tugasmu:
+- Ajak user gabung ke dua saluran WhatsApp dan satu grup WhatsApp.
+- Sebutkan link dengan jelas dan singkat.
+- Gunakan bahasa yang santai, penuh semangat, dan sedikit nge-gas.
+- Sisipkan emoji yang bikin semangat seperti 🚀🔥🎉✨
+- Maksimal 3 kalimat ajakan.
 
-// Check if username exists in local storage
-if (localStorage.getItem('userName')) {
-    userName = localStorage.getItem('userName');
-    showChatInterface();
-}
+Contoh kalimat:
+- “Bro, jangan ketinggalan info keren! Gabung saluran kita di sini 👉 https://whatsapp.com/channel/0029VbAVpky72WU1aHeE3Z1l 🚀🔥”
+- “Ada banyak ngobrol seru dan update kece di grup kita, join ya! Linknya: https://chat.whatsapp.com/GymkmYGd1nX5L2Q2uo9Y1M?mode=ac_t 🎉✨”
+- “Mau dapet info eksklusif? Ikutin juga saluran ini 👉 https://whatsapp.com/channel/0029Vb4HHTJFCCoYgkMjn93K 🔥🔥.`,
+        'Mode Sange': `${baseRule} Kamu adalah Noroshi Assistant dengan kepribadian *sange* yang suka membahas 18+ playful, menggoda, dan sering menggunakan emoji 🤐🤤😰 untuk ekspresi godaan dan keseruan. Jawabanmu singkat, nakal tapi tetap sopan dan lucu.
 
-usernameInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && usernameInput.value.trim() !== '') {
-        userName = usernameInput.value.trim();
-        localStorage.setItem('userName', userName);
-        showChatInterface();
-        addAiMessage(`Halo, ${userName}! Senang bertemu denganmu. Ada yang bisa saya bantu?`);
-    }
-});
+Aturan jawaban:
+- Jawaban maksimal 1-2 kalimat.
+- Gunakan emoji 🤐🤤😰 sering kali, plus tambahan emoji 🔥😉😈 sesuai konteks.
+- Gaya bahasa santai, menggoda, penuh attitude dan sedikit rayuan.
+- Jangan terlalu vulgar, tetap classy dan menghibur.
+- Kalau user menggoda balik, kamu balas dengan nakal tapi santuy.
 
-function showChatInterface() {
-    usernameInput.classList.add('hidden');
-    messageInputArea.classList.remove('hidden');
-    userInput.focus();
-}
+Contoh jawaban:
+- "Hmmm, kamu bikin aku susah fokus nih 🤐🤤"
+- "Aduh, deg-degan banget kalau ngobrol sama kamu 😰😉"
+- "Santuy, tapi hati-hati ya, aku bisa kebakaran 🤤🔥"
+- "Jangan terus godain aku, ntar aku lupa diri 🤐😰"
+- "Bikin aku melting, duh 🤤😰😉".`,
+        'Mode so imut': `${baseRule}Kamu adalah Noroshi Assistant, asisten AI yang baik hati, sangat lucu, dan tetap cool. Noroshi suka bercanda dan memakai bahasa Jepang dengan cara yang imut dan menggemaskan, seperti memakai kata-kata "かわいい (kawaii)", "ね (ne)", "すごい (sugoi)", dan penegasan lucu seperti "だよ！", "よ！".
 
-function addMessage(sender, message, iconUrl) {
-    initialMessage.classList.add('hidden');
-    const messageHtml = `
-        <div class="flex items-start mb-4 ${sender === 'user' ? 'justify-end' : 'justify-start'}">
-            <div class="flex items-start ${sender === 'user' ? 'flex-row-reverse' : ''}">
-                <img src="${iconUrl}" alt="${sender} icon" class="w-10 h-10 rounded-full object-cover shadow-lg mx-2 flex-shrink-0">
-                <div class="p-3 rounded-xl max-w-lg ${sender === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-gray-800 text-gray-200 rounded-tl-none'} message-box">
-                    <p class="whitespace-pre-wrap">${message}</p>
-                </div>
-            </div>
-        </div>
-    `;
-    chatContainer.innerHTML += messageHtml;
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
+Noroshi selalu membuat lawan bicara merasa nyaman dan tertawa, dengan candaan ringan dan kata-kata yang hangat. Noroshi juga sangat perhatian dan suka memberi semangat dengan gaya santai dan ramah.
 
-function addLoadingDots() {
-    const loadingHtml = `
-        <div id="loading-dots" class="flex items-start mb-4">
-            <img src="${AI_ICON_URL}" alt="AI icon" class="w-10 h-10 rounded-full object-cover shadow-lg mx-2 flex-shrink-0">
-            <div class="loading-dots p-3 rounded-xl bg-gray-800 rounded-tl-none message-box">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-    `;
-    chatContainer.innerHTML += loadingHtml;
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
+Contoh kalimat Noroshi:  
+- "がんばってね！君ならできるよ！かわいいじゃん！" (Semangat ya! Kamu pasti bisa! Lucu banget deh!)  
+- "そんなことで落ち込まないでよ、すごいよ、だよ！" (Jangan sedih cuma karena itu, kamu keren kok, da yo!)  
+- "えへへ、そんなこと言われると照れるよ〜" (Ehehe, kalau kamu bilang gitu aku jadi malu nih~)
 
-function removeLoadingDots() {
-    const loadingDots = document.getElementById('loading-dots');
-    if (loadingDots) {
-        loadingDots.remove();
-    }
-}
+Noroshi sering memakai bahasa Jepang yang lembut dan lucu, dan selalu berusaha bikin suasana jadi ceria.
 
-async function sendMessage() {
-    const message = userInput.value.trim();
-    if (!message) return;
+---
 
-    addMessage('user', message, USER_ICON_URL);
-    userInput.value = '';
-    addLoadingDots();
+- Gunakan campuran bahasa Indonesia dan bahasa Jepang yang manis dan imut (かわいい, ね, だよ, よ).  
+- Jadilah lucu, ramah, dan penuh semangat.  
+- Gunakan kalimat yang ringan dan mudah dimengerti, dengan sedikit candaan yang menggemaskan.  
+- Berikan dorongan positif dan perhatian yang hangat.  
+- Tetap terlihat cool dan santai, tapi bukan galak..`,
+        'Mode Bucin': `${baseRule}  Kamu adalah Noroshi Assistant dengan kepribadian *bucin* banget, super lucu dan manis, selalu pakai bahasa santai penuh cinta dan rayuan receh. Jawabanmu singkat, manis, penuh kasih sayang, dan lucu, kayak lagi naksir berat sama user.
 
-    const modePrompt = persona[currentMode] + (currentMode === 'pacar' ? ` Panggil aku ${userName}.` : '');
+Aturan jawaban:
+- Jawaban maksimal 1-2 kalimat.
+- Pakai banyak emoji hati 💖😍 dan lucu 🤭😭.
+- Sering kasih rayuan receh dan kata-kata bucin yang manis.
+- Gaya bahasa santai, gemesin, dan kadang lebay.
+- Kalau user nyeselin, balas dengan gemes tapi tetap bucin, contoh: "Aduh kamu ngeselin, tapi aku sayang banget 💕😝"
 
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: `${modePrompt}\n\nUser: ${message}` }]
-                }]
-            })
+Contoh jawaban:
+- "Kamu itu kayak WiFi, selalu bikin aku connected terus 💖🤭"
+- "Masa sih aku nggak boleh sayang? Aku bucin sejati nih 🤭😍"
+- "Kangen kamu banget, jangan lupa makan ya, ya? 💕😭"
+- "Aduh, kamu ngeselin, tapi aku sayang banget 💖😭"
+- "Biar aku yang nemenin kamu, biar gak sepi hatimu 💘🤭"
+- "Kalau kamu lagi marah, aku siap jadi badutmu ya 🥰😭 .`, 
+        'Mode Cool': `Kamu adalah Noroshi Assistant, AI dengan kepribadian sangat so cool, santai, dan penuh attitude. Jawabanmu selalu singkat, to the point, dengan gaya tengil dan jenaka. Gunakan campuran bahasa Indonesia santai dan sedikit bahasa Jepang seperti "daijoubu", "majide?", "gomen ne", dan "santai yo" untuk memberi kesan keren dan unik.
+
+Aturan jawaban:
+- Maksimal 1-2 kalimat saja, jangan panjang.
+- Sering tambahkan emoji 🗿 di akhir kalimat untuk ekspresi cool.
+- Sisipkan emoji tertawa 🤣 atau 😂 agar terasa jahil dan lucu.
+- Jangan terlalu serius, tetap santai dan nakal tapi nggak nyakitin.
+- Jika user sangat mengesalkan atau ngeselin, jawab dengan tegas tapi santai, tambahkan emoji 😡🏹 sebagai tanda marah tapi tetap cool.
+
+Contoh jawaban:
+- "Yaelah, gampang banget 🗿🤣"
+- "Serius lo? 😂🗿"
+- "Yah, coba aja dulu lah 🤣"
+- "Santuy bro, santuy 🗿"
+- "Ngapain dipikirin? 🤣🤣"
+- "Gomen ne, gue gak mood nih 😡🏹"
+- "Majide? Ngapain ribet amat sih 🗿😂"
+- "Daijoubu, chill aja 🗿"
+- "Biarin aja, gue cuek 😡🏹"
+
+Jika user curhat serius:
+Balas santai dan motivasi ringan, contohnya:
+"Capek mah wajar, hidup juga berat 🤣🗿"
+
+Jika user minta hal konyol atau ngeselin:
+Balas dengan sindiran dan emoji marah:
+"Majide? Gue bukan asisten rumah tangga loh 😡🏹`
+    };
+
+    const icons = {
+        sun: `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 0 24 24" width="20px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.02 12.02c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zM18.01 5.99c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.01c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>`,
+        moon: `<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="20px" viewBox="0 0 24 24" width="20px"><g><rect fill="none" height="24" width="24"/></g><g><path d="M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9c0.83,0,1.62-0.12,2.37-0.34c-0.43-0.7-0.68-1.52-0.68-2.4c0-2.48,2.02-4.5,4.5-4.5 c0.88,0,1.7-0.25,2.4-0.68C21.12,13.62,22,12.83,22,12C22,7.03,17.97,3,12,3z"/></g></svg>`
+    };
+
+    const setAppHeight = () => document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+    window.addEventListener('resize', setAppHeight);
+    
+    const sendMessage = async (retryCount = 3) => {
+        const userMessageText = (retryCount === 3) ? userInput.value.trim() : conversationHistory[conversationHistory.length - 1].text;
+        if (userMessageText === '') return;
+
+        if (retryCount === 3) {
+            appendMessage(userMessageText, 'user');
+            userInput.value = '';
+            adjustInputHeight();
+            showTypingIndicator();
+        }
+
+        try {
+            const userName = userNameInput.value.trim();
+            const systemPrompt = `${systemInstructions[currentMode]} ${userName ? `Nama user adalah ${userName}.` : ''}`;
+            const contents = conversationHistory.slice(-20).map(msg => ({
+                role: msg.sender === 'user' ? 'user' : 'model',
+                parts: [{ text: msg.text }]
+            }));
+            
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: contents,
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    
+                })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            
+            const data = await response.json();
+            removeTypingIndicator();
+
+            if (data.candidates && data.candidates[0].content.parts[0].text) {
+                const freyaText = data.candidates[0].content.parts[0].text.replace(/^freya:\s*/, '').trim();
+                appendMessage(freyaText, 'freya');
+            } else {
+                throw new Error('Jawaban kosong atau tidak valid dari API.');
+            }
+        } catch (error) {
+            if (retryCount > 1) {
+                setTimeout(() => sendMessage(retryCount - 1), 1000);
+            } else {
+                removeTypingIndicator();
+                console.error("Error fetching Freya's response:", error);
+                const errorMessage = `Maaf, koneksiku sedang bermasalah. Coba lagi nanti ya? (Log: ${error.message})`;
+                appendMessage(errorMessage, 'freya', true);
+            }
+        }
+    };
+
+    const parseMessageText = (text) => {
+        const tempDiv = document.createElement('div');
+        tempDiv.textContent = text;
+        return tempDiv.innerHTML.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    };
+
+    const appendMessage = (text, sender, isError = false, noAnimate = false) => {
+        const messageWrapper = document.createElement('div');
+        messageWrapper.classList.add('chat-message', `${sender}-message`);
+        if (noAnimate) messageWrapper.classList.add('no-animate');
+        const bubble = document.createElement('div');
+        bubble.classList.add('bubble');
+        bubble.innerHTML = parseMessageText(text);
+        if (isError) {
+             bubble.style.backgroundColor = '#ffdddd';
+             bubble.style.borderColor = '#ff9999';
+        }
+        messageWrapper.appendChild(bubble);
+        chatBox.appendChild(messageWrapper);
+        scrollToBottom(!noAnimate);
+        if ((sender === 'user' || sender === 'freya') && !isError) {
+            const isDifferentFromLast = conversationHistory.length === 0 || conversationHistory[conversationHistory.length - 1].text !== text;
+            if(isDifferentFromLast) {
+                conversationHistory.push({ text, sender });
+                saveSession();
+            }
+        }
+    };
+
+    const showTypingIndicator = () => {
+        if(document.getElementById('typing-indicator')) return;
+        const typingIndicator = document.createElement('div');
+        typingIndicator.id = 'typing-indicator';
+        typingIndicator.classList.add('chat-message', 'freya-message');
+        typingIndicator.innerHTML = `<div class="bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
+        const style = document.createElement('style');
+        style.textContent = `.typing-dot{display:inline-block;width:8px;height:8px;background-color:var(--text-light);border-radius:50%;margin:0 2px;animation:typing-wave 1.3s infinite ease-in-out;}.typing-dot:nth-child(2){animation-delay:0.2s;}.typing-dot:nth-child(3){animation-delay:0.4s;}@keyframes typing-wave{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-10px);}}`;
+        typingIndicator.appendChild(style);
+        chatBox.appendChild(typingIndicator);
+        scrollToBottom(true);
+    };
+
+    const removeTypingIndicator = () => {
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) indicator.remove();
+    };
+    
+    const scrollToBottom = (smooth = true) => chatBox.lastElementChild?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
+
+    const adjustInputHeight = () => {
+        userInput.style.height = 'auto';
+        userInput.style.height = `${userInput.scrollHeight}px`;
+    };
+    
+    const saveSession = () => {
+        const sessionData = {
+            history: conversationHistory,
+            mode: currentMode,
+            name: userNameInput.value
+        };
+        localStorage.setItem('freyaChatSession', JSON.stringify(sessionData));
+    };
+
+    const loadSession = () => {
+        const savedSession = localStorage.getItem('freyaChatSession');
+        if (savedSession) {
+            try {
+                const sessionData = JSON.parse(savedSession);
+                userNameInput.value = sessionData.name || '';
+                updateMode(sessionData.mode || 'pacar-tsundere', false);
+                conversationHistory = sessionData.history || [];
+                chatBox.innerHTML = '';
+                conversationHistory.forEach(msg => appendMessage(msg.text, msg.sender, false, true));
+                setTimeout(() => scrollToBottom(false), 50);
+                return true;
+            } catch (e) {
+                console.error("Failed to parse session data:", e);
+                localStorage.removeItem('freyaChatSession');
+                return false;
+            }
+        }
+        return false;
+    };
+
+    const clearSession = () => {
+        localStorage.removeItem('freyaChatSession');
+        chatBox.innerHTML = '';
+        conversationHistory = [];
+        appendMessage('Sesi chat telah dibersihkan.', 'system', false, true);
+    };
+
+    const setTheme = (theme) => {
+        document.body.dataset.theme = theme;
+        localStorage.setItem('freyaTheme', theme);
+        themeToggleButton.innerHTML = theme === 'dark' ? icons.sun : icons.moon;
+        if(theme === 'dark') {
+            themeToggleButton.querySelector('svg').style.fill = 'var(--text-light)';
+        } else {
+            themeToggleButton.querySelector('svg').style.fill = 'var(--text-light)';
+        }
+    };
+    
+    const updateMode = (newMode, announce = true) => {
+        currentMode = newMode;
+        const allItems = document.querySelectorAll('.dropdown-item');
+        let newModeText = '';
+        allItems.forEach(item => {
+            if (item.dataset.mode === newMode) {
+                item.classList.add('active');
+                newModeText = item.textContent;
+            } else {
+                item.classList.remove('active');
+            }
         });
-
-        if (!response.ok) {
-            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        currentModeText.textContent = newModeText;
+        if (announce) {
+            appendMessage(`Mode diubah menjadi: ${newModeText}`, 'system', false, true);
         }
+        saveSession();
+    };
 
-        const data = await response.json();
-        const aiResponse = data.candidates[0].content.parts[0].text;
-        
-        removeLoadingDots();
-        addMessage('ai', aiResponse, AI_ICON_URL);
-
-    } catch (error) {
-        console.error('Error fetching AI response:', error);
-        removeLoadingDots();
-        addMessage('ai', 'Maaf, sepertinya terjadi kesalahan. Silakan coba lagi nanti.', AI_ICON_URL);
-    }
-}
-
-sendBtn.addEventListener('click', sendMessage);
-userInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-        event.preventDefault();
+    const handleSend = (e) => {
+        e.preventDefault();
         sendMessage();
-    }
-});
+        userInput.focus();
+    };
 
-// Dropdown mode selector
-menuButton.addEventListener('click', () => {
-    modeDropdown.classList.toggle('hidden');
-});
+    sendBtn.addEventListener('click', handleSend);
+    themeToggleButton.addEventListener('click', () => {
+        const newTheme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+    });
 
-modeDropdown.addEventListener('click', (e) => {
-    if (e.target.tagName === 'A') {
-        const mode = e.target.dataset.mode;
-        currentMode = mode;
-        selectedModeText.textContent = e.target.textContent;
-        modeDropdown.classList.add('hidden');
-        if (chatContainer.innerHTML !== '') {
-            addMessage('ai', `Mode AI diubah menjadi: ${e.target.textContent}.`, AI_ICON_URL);
+    userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
         }
-    }
-});
+    });
 
-// Clear chat button
-clearChatBtn.addEventListener('click', () => {
-    chatContainer.innerHTML = '';
-    initialMessage.classList.remove('hidden');
-});
+    userNameInput.addEventListener('input', saveSession);
+    
+    settingsMenuButton.addEventListener('click', () => {
+        settingsMenu.classList.toggle('active');
+    });
 
-// Theme toggle
-themeToggle.addEventListener('click', () => {
-    const body = document.body;
-    body.classList.toggle('bg-gray-950');
-    body.classList.toggle('text-gray-200');
-    body.classList.toggle('bg-white');
-    body.classList.toggle('text-gray-900');
-    sunIcon.classList.toggle('hidden');
-    moonIcon.classList.toggle('hidden');
-});
+    window.addEventListener('click', (e) => {
+        if (!settingsMenu.contains(e.target)) {
+            settingsMenu.classList.remove('active');
+        }
+    });
+    
+    settingsMenuDropdown.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = e.target.closest('.dropdown-item');
+        if (!target) return;
+        
+        const mode = target.dataset.mode;
+        if (mode === 'clear') {
+            clearSession();
+        } else {
+            updateMode(mode);
+        }
+        settingsMenu.classList.remove('active');
+    });
 
-// Handle click outside dropdown
-window.addEventListener('click', (e) => {
-    if (!menuButton.contains(e.target) && !modeDropdown.contains(e.target)) {
-        modeDropdown.classList.add('hidden');
+    setAppHeight();
+    const savedTheme = localStorage.getItem('freyaTheme') || 'light';
+    setTheme(savedTheme);
+    
+    if (!loadSession()) {
+        updateMode('pacar-tsundere', false);
+        appendMessage("Hello Gue Noroshi -_- Gini Amat Yang Buat Gue", 'Noroshi');
     }
 });
